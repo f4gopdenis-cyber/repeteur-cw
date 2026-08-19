@@ -101,24 +101,10 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Echec de la mise a jour de pip." -Foregro
 & $venvPython -m pip install -r requirements.txt
 if ($LASTEXITCODE -ne 0) { Write-Host "Echec de l'installation des dependances." -ForegroundColor Red; exit 1 }
 
-# --- 4bis. Verifier que les fichiers du projet sont bien presents ---
-$requiredFiles = @("app.py", "cw_decoder.py", "rig_control.py")
-$missing = $requiredFiles | Where-Object { -not (Test-Path (Join-Path $root $_)) }
-if ($missing) {
-    Write-Host ""
-    Write-Host "ERREUR : fichier(s) manquant(s) dans ce dossier : $($missing -join ', ')" -ForegroundColor Red
-    Write-Host "Verifiez qu'ils sont bien nommes exactement ainsi (pas de '(1)' ou autre suffixe" -ForegroundColor Red
-    Write-Host "ajoute par le navigateur lors du telechargement), puis relancez build_exe.bat." -ForegroundColor Red
-    exit 1
-}
-
 # --- 4. Fabrication de l'executable ---
 Write-Host ""
 Write-Host "Fabrication de l'executable (peut prendre 1 a 2 minutes)..." -ForegroundColor Cyan
-# --hidden-import force l'inclusion de ces modules meme si l'analyse automatique
-# de PyInstaller ne les detectait pas pour une raison ou une autre (filet de securite).
-& $venvPython -m PyInstaller --onefile --windowed --noconfirm --name RepeteurCW `
-    --hidden-import=cw_decoder --hidden-import=rig_control app.py
+& $venvPython -m PyInstaller --onefile --windowed --noconfirm --name RepeteurCW app.py
 if ($LASTEXITCODE -ne 0) { Write-Host "Echec de la fabrication de l'executable." -ForegroundColor Red; exit 1 }
 
 # --- 5. Copier l'executable a la racine du projet ---

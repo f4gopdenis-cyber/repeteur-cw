@@ -1,20 +1,6 @@
-# Réglages personnels (indicatif, port COM, etc.) — chacun a les siens
-settings.json
-
-# Artefacts de fabrication de l'exécutable (recréés par build_exe.bat)
+__pycache__/
+*.pyc
 build/
 dist/
 build_venv/
-*.spec
-RepeteurCW.exe
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-
-# Éditeurs / OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+*.egg-info/

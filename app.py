@@ -778,7 +778,7 @@ class App(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("Répéteur CW HF — Kenwood TS-990S")
+        self.title("Répéteur CW HF — F4GOP")
         self.geometry("760x620")
         self.minsize(680, 560)
 
@@ -793,7 +793,7 @@ class App(tk.Tk):
         header = ttk.Frame(self, style="Header.TFrame")
         header.pack(fill="x")
         ttk.Label(
-            header, text="📡 Répéteur CW HF — Kenwood TS-990S",
+            header, text="📡 Répéteur CW HF — F4GOP",
             style="HeaderTitle.TLabel",
         ).pack(side="left", padx=16, pady=12)
 

@@ -1,130 +1,110 @@
 # Répéteur CW HF — Kenwood TS-990S
 
-Application Windows (interface graphique) qui écoute le trafic CW reçu par
-un Kenwood TS-990S, décode l'indicatif appelant, et répond automatiquement
-en CW — rapport RST, QSO scripté, exercices de copie au son, balise météo
-automatique, et plus. Aucun logiciel intermédiaire requis (ni Hamlib, ni
-OmniRig) : l'application parle directement au port série du poste.
+Une seule application avec interface graphique : un onglet **Réglages**
+(indicatif, **port COM et baud rate du poste**, audio, vitesse CW...) et un
+onglet **Répéteur** (Démarrer/Arrêter, suivi en direct). Écoute le trafic
+reçu par le TS-990S, décode l'indicatif appelant, et répond
+automatiquement avec un rapport (RST), le locator et le QTH de la
+station.
 
-> ⚠️ **Écrit et testé spécifiquement pour le Kenwood TS-990S** (commande CAT
-> native `KY` pour l'émission CW). Une adaptation serait nécessaire pour un
-> autre poste — voir [Adapter à un autre poste](#adapter-à-un-autre-poste).
+L'application parle **directement** au port série du TS-990S (protocole
+CAT ASCII Kenwood) — **aucun logiciel intermédiaire requis**, ni Hamlib,
+ni OmniRig. Juste le pilote USB du poste.
 
-## Fonctionnalités
-
-- **Décodage CW** par algorithme de Goertzel, avec plusieurs niveaux de
-  sensibilité (Normal / Sensible / Très sensible), réduction optionnelle du
-  bruit impulsif (QRM), tolérance de fréquence élargie, gain manuel et
-  automatique (AGC)
-- **Réponse automatique** : soit un simple rapport RST + QTH, soit un QSO
-  scripté en 3 échanges (RST/nom/QTH → poste/puissance/antenne → salutations)
-- **Exercices de copie au son** : le correspondant envoie `EXC` (chiffres),
-  `EXN` (lettres) ou `EXM` (mots) — le programme envoie 10 groupes, confirme
-  par `RR` si correct, répète sur demande (`AGN`)
-- **Balise météo automatique** : diffuse température/pression (via
-  [Open-Meteo](https://open-meteo.com), gratuit, sans clé API) à intervalle
-  réglable, message personnalisable
-- **Espacement Farnsworth réglable** à l'émission (entre lettres et entre
-  mots), via coupure réelle du PTT — utile pour l'entraînement de
-  correspondants débutants
-- **Mode diagnostic** : affiche les durées mesurées (point/trait/espace) en
-  réception, et le détail de ce qui est réellement envoyé en émission
-- **Interface personnalisable** : couleur du thème et du fond au choix
-
-## Prérequis
+## Ce qu'il faut installer une seule fois, avant de commencer
 
 1. **Pilote USB Kenwood** pour le TS-990S (le poste doit apparaître comme
-   port COM dans le Gestionnaire de périphériques Windows)
-2. **Python 3.11+** ([python.org](https://www.python.org/downloads/)) —
-   cochez *"Add python.exe to PATH"* à l'installation. Uniquement nécessaire
-   pour fabriquer l'exécutable ; pas requis ensuite pour l'utiliser.
+   port COM dans le Gestionnaire de périphériques Windows — notez le
+   numéro, par exemple `COM5`)
+2. **Python 3.11+** depuis https://www.python.org/downloads/ (cochez
+   "Add python.exe to PATH"), mais uniquement pour fabriquer l'exécutable
+   à l'étape suivante — vous n'en aurez plus besoin ensuite
 
-## Installation
+## Fabriquer l'application (une seule fois)
 
-```bash
-git clone https://github.com/<votre-compte>/<nom-du-depot>.git
-cd <nom-du-depot>
-```
+Double-cliquez sur **`build_exe.bat`**. Il installe les dépendances dans un
+environnement temporaire et fabrique **`RepeteurCW.exe`** dans ce dossier.
+Ça prend une à deux minutes.
 
-Double-cliquez sur **`build_exe.bat`**. Il crée un environnement Python
-temporaire, installe les dépendances, et fabrique **`RepeteurCW.exe`** dans
-ce dossier (1-2 minutes).
+Une fois `RepeteurCW.exe` créé, vous pouvez :
+- le déplacer où vous voulez (il est autonome)
+- supprimer les dossiers `build\`, `dist\` et `build_venv\` si vous le
+  souhaitez — ils ne servent qu'à la fabrication
 
-Une fois l'exécutable créé, vous pouvez :
-- le déplacer où vous voulez (autonome, pas d'installation)
-- supprimer `build\`, `dist\` et `build_venv\` (uniquement utiles à la
-  fabrication)
-
-## Utilisation
+## Utilisation au quotidien
 
 **Un seul programme à lancer : `RepeteurCW.exe`.**
 
-- **Onglet Réglages** : identité de la station (indicatif, locator, QTH,
-  nom, poste, puissance, antenne), port COM et baud rate (menu 7-00/7-01 du
-  TS-990S), audio (périphérique, gain, sensibilité), options (QSO scripté,
-  QRM, tolérance de fréquence, balise météo), apparence
-- **Onglet Répéteur** : Démarrer / Arrêter, journal en direct
+- Onglet **Réglages** :
+  - indicatif, locator, QTH
+  - **Port COM** : liste déroulante avec bouton **Actualiser** (détecte
+    automatiquement les ports disponibles)
+  - **Baud rate** : doit correspondre au réglage du menu **7-00** (port
+    COM) ou **7-01** (port USB virtuel) du TS-990S — souvent 115200 en USB
+  - périphérique audio d'entrée (liste déroulante), fréquence du ton CW,
+    vitesse CW
+  - bouton "Enregistrer les réglages"
+- Onglet **Répéteur** : bouton **Démarrer** (ouvre le port série, vérifie
+  que le poste répond, puis lance l'écoute), zone de suivi en direct du
+  texte décodé et des réponses envoyées, bouton **Arrêter**.
 
 Les réglages sont sauvegardés dans `settings.json` à côté de l'exécutable
-(ignoré par Git — chacun a les siens).
+et rechargés automatiquement au prochain lancement.
 
-### Déclencheurs reconnus dans le trafic reçu
-
-| Texte reçu contenant... | Effet |
-|---|---|
-| votre indicatif | démarre le rapport/QSO scripté |
-| `EXC` | exercice de copie — groupes de 5 chiffres |
-| `EXN` | exercice de copie — groupes de 5 lettres |
-| `EXM` | exercice de copie — mots |
-| `AGN` (pendant un exercice) | répète le dernier groupe |
-
-## Comment ça marche
+## Comment ça marche (pour comprendre le code)
 
 ```
-TS-990S --(audio RX, USB)--> décodeur Goertzel (cw_decoder.py)
-TS-990S <--(CAT série, USB)--> rig_control.py
-                                  ├─ FA;/MD;  fréquence/mode
-                                  ├─ TX;/RX;  PTT
-                                  ├─ SM0;     S-mètre réel
-                                  └─ KY ...;  émission CW native
-app.py (Tkinter) orchestre le tout, gère les réglages et l'interface.
+TS-990S --(audio RX, câble USB)--> décodeur Goertzel (cw_decoder.py)
+TS-990S <--(CAT, câble USB/série)--> rig_control.py
+                                        ├─ FA;/MD;  lecture fréquence/mode
+                                        ├─ TX;/RX;  PTT
+                                        ├─ SM0;     S-mètre réel (RST fiable)
+                                        └─ KY ...;  émission CW réelle
+app.py relie le tout dans une interface graphique (Tkinter) et gère le
+cycle de vie de la connexion série + du décodeur dans un thread séparé.
 ```
 
-Le TS-990S envoie le CW directement via sa commande CAT native `KY` — pas
-de matériel externe, pas d'interface de manipulation.
+Le TS-990S envoie le CW directement via sa commande CAT native `KY` —
+pas besoin de matériel externe ni d'interface de manipulation. La
+connexion série directe permet aussi de vraiment interroger `KY;` et
+d'attendre la confirmation `KY0;` (buffer disponible) avant chaque bloc
+de texte — plus fiable qu'un simple calcul de durée.
 
-## Limites connues
+## Limites connues de ce prototype
 
-- Décodeur à seuil simple : fonctionne bien sur signal propre, moins bien
-  en dessous d'un certain rapport signal/bruit ou à très haute vitesse
-  (25-30+ mots/minute) avec du bruit — comme pour une oreille humaine, il y
-  a des limites physiques
-- Sensibilité, réduction de bruit et tolérance de fréquence sont chacune un
-  compromis (plus de portée *ou* plus de rejet de bruit, rarement les deux)
-- Testé uniquement sur Kenwood TS-990S
+- Le décodeur CW reste un algorithme de Goertzel simple avec seuils
+  adaptatifs. Il fonctionne bien sur un signal propre en test, mais un
+  vrai trafic HF avec QRM/fading demandera d'affiner les seuils, voire de
+  passer à un décodeur plus robuste.
+- Le "S" du RST envoyé s'appuie sur le S-mètre réel du poste (lu via
+  `SM0;`) — bien plus fiable qu'une estimation purement audio — mais le
+  mapping vers l'échelle S reste approximatif et à recaler chez vous.
+- Le déclenchement de la réponse (indicatif détecté dans le texte décodé)
+  est simpliste. Vous voudrez sans doute affiner la logique de
+  reconnaissance d'appel une fois le décodeur validé.
+- **Un seul programme à la fois peut utiliser le port série** : fermez
+  tout autre logiciel de contrôle CAT (WSJT-X, un logger, OmniRig s'il
+  tourne encore...) avant de cliquer sur Démarrer ici.
 
-## Adapter à un autre poste
+## Dépannage
 
-Le point clé à adapter est `rig_control.py`, qui utilise le jeu de
-commandes CAT propriétaire Kenwood (`FA;`, `MD;`, `TX;`/`RX;`, `SM0;`, et
-surtout `KY` pour l'émission CW native). Si votre poste a une commande CAT
-équivalente pour envoyer du texte en CW, l'adaptation est mineure ; sinon,
-il faudra une autre approche pour l'émission (ex: pilotage direct du
-manipulateur).
+- **"ERREUR de connexion série"** : le port COM choisi est peut-être déjà
+  utilisé par un autre logiciel, ou ne correspond pas au TS-990S. Fermez
+  les autres logiciels CAT et vérifiez le port dans le Gestionnaire de
+  périphériques.
+- **"Port ouvert mais le poste ne répond pas"** : le baud rate choisi
+  dans l'application ne correspond pas à celui réglé sur le poste (menu
+  7-00/7-01). Essayez les valeurs courantes (115200 en USB, ou celle
+  affichée dans le menu du TS-990S).
+- **Pas de son détecté** : vérifiez dans les paramètres Windows du son que
+  le niveau d'entrée du périphérique audio du TS-990S n'est pas coupé, et
+  que vous avez choisi le bon périphérique dans l'onglet Réglages.
 
-## Point réglementaire
+## Point réglementaire à vérifier
 
 Un dispositif qui émet automatiquement en HF sans intervention d'un
 opérateur peut relever d'un régime particulier (station à fonctionnement
 automatique/balise) selon la réglementation de votre pays (en France :
-ARCEP/ANFR). Vérifiez ce point avant toute mise en service réelle sur
-l'antenne.
-
-## Licence
-
-[MIT](LICENSE) — libre d'utilisation, modification et redistribution.
-
-## Contributions
-
-Développé pour un usage personnel (station F4GOP) et partagé pour la
-communauté radioamateur. Suggestions et *pull requests* bienvenues.
+ARCEP/ANFR). Vérifiez ce point avant une mise en service réelle sur
+l'antenne. Vous pouvez tester toute l'application sans risque sur charge
+fictive ou sans antenne branchée.
